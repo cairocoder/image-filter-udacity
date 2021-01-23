@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Router, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -30,31 +30,31 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   /**************************************************************************** */
 
   app.get('/filteredimage', 
-    async ( req, res ) => { 
+    async ( req: Request, res: Response ) => { 
     let { image_url } = req.query;
 
     console.log("1. validate the image_url query");
-    if (!image_url) {
+    if ( !image_url ) {
       return res.status(400).send("Invalid request. image_url is required");
     }
   
     console.log("2. call filterImageFromURL(image_url) to filter the image");
     const filterResult = await filterImageFromURL(image_url)
     .then((filterResult) => {
-
-      if(filterResult)
+      if ( filterResult )
       {
-        console.log("Success: " + filterResult);
+        filterResult;
       }
       console.log("3. send the resulting file in the response");
       //3. send the resulting file in the response
-      res.sendFile(filterResult, function(){
-        console.log("4. deletes any files on the server on finish of the response");
-        //4. deletes any files on the server on finish of the response
-        deleteLocalFiles([filterResult]);
+      res.status(200)
+        .sendFile(filterResult, function() {
+          console.log("4. deletes any files on the server on finish of the response");
+          //4. deletes any files on the server on finish of the response
+          deleteLocalFiles([filterResult]);
       });
     })
-    .catch(error => { console.log('Error caught', error.message); }); ;
+    .catch(error => { return res.status(400).send(`Error:, ${error.message}`); });
 
   });
 
@@ -62,9 +62,9 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
-    res.send("try GET /filteredimage?image_url={{}}")
-  } );
+  app.get( "/", async ( req: Request, res: Response ) => {
+    res.status(200).send("try GET /filteredimage?image_url={{}}")
+  });
   
 
   // Start the Server
